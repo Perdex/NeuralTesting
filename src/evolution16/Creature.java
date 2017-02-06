@@ -6,12 +6,12 @@ import javax.swing.JPanel;
 
 public class Creature{
     
+    private static final int killSpeed = 20;
     public static int topGen = 0, leastGen = 0;
     
-    private double speed, normalSpeed;
-    double x, y, rot;
-    private int food = 0, lifeTime = 3000, generation;
-    int size;
+    private double speed, normalSpeed, x, y, rot;
+    private int food = 400;
+    private final int generation, size;
     private final Brain brain;
     
     private int r, g, b;
@@ -40,7 +40,7 @@ public class Creature{
         generation = c.generation + 1;
         topGen = Math.max(topGen, generation);
         
-        size = c.size;
+        int size = c.size;
         double d = sq(Math.random() * 3);
         if(Math.random() < 0.5)
             size += d;
@@ -50,6 +50,7 @@ public class Creature{
         size = Math.max(size, 6);
         size = Math.min(size, 25);
         
+        this.size = size;
         
         normalSpeed = c.normalSpeed;
         d = sq(Math.random() * 3);
@@ -91,14 +92,21 @@ public class Creature{
     private int sq(double d){
         return (int)(d*d);
     }//sq
-    
+
+    public double getRot(){
+        return rot;
+    }
+
+    public int getSize(){
+        return size;
+    }
     public int getGen(){
         return generation;
     }//getGen   
     public int getChrom(){
         return brain.size();
     }//getGen
-    public ArrayList<Brain.neuron> getNeurons(){
+    public ArrayList<Neuron> getNeurons(){
         return brain.getNeurons();
     }//getNeurons
     public double[] getInput(){
@@ -108,17 +116,15 @@ public class Creature{
         return brain.getOut();
     }//getInput
     
-    public Creature act(double pace, ArrayList<Creature> cc, JPanel p){
-        
-        //do whatever needs to be done
-        
+    public boolean act(double pace, ArrayList<Creature> cc, ArrayList<Food> foods, JPanel p){
+        //boolean tells if this should be removed
         
         //check age
-        lifeTime--;
-        if(lifeTime < 0)
-            return this;
+        food--;
+        if(food < 0)
+            return true;
         
-        double[] out = brain.act(this, cc, pace);
+        double[] out = brain.act(this, cc, foods, pace);
         
         rot += out[0] * pace * 2;
         speed += out[1] * pace * 2;
@@ -151,17 +157,22 @@ public class Creature{
 
         rot %= Math.PI * 2;
         
-        Creature kill = null;
-        for(int i = 0; i < cc.size(); i++){
-            Creature c = cc.get(i);
-            
+        for(int i = 0; i < foods.size(); i++){
+            Food f = foods.get(i);
+            if(f.contains(getPointX(), getPointY())){
+                eat(f.getFood());
+                foods.remove(i);
+            }
+        }
+        
+        for(Creature c : cc){
             if(c == this)
                 continue;
             
             //check if killing the other
             if(Math.hypot(c.x - getPointX(), c.y - getPointY()) < c.size){
-                kill = c;
-                food++;
+                c.food -= killSpeed;
+                food += killSpeed;
             }
             
             //remove overlap
@@ -174,20 +185,20 @@ public class Creature{
             }
         }
         
-        if(Math.random() < 0.005 * (1 + food) * pace){
+        if(food > 400 && Math.random() < 1e-3 * pace){
             cc.add(new Creature(this));
             
-            food /= 2;
+            food -= 400;
         }
         
         
         leastGen = Math.min(leastGen, generation);
         
-        return kill;
+        return false;
     }//act
     
     public boolean contains(Point p){
-        return Math.hypot(p.x - x, p.y - y) < size;
+        return Math.hypot(p.x - x, p.y - y) < size + 5;
     }//contains
     
     public void draw(Graphics g, boolean selected){
@@ -207,11 +218,26 @@ public class Creature{
         
     }//draw
     
-    public void setX(double x){this.x = x;}//setX
-    public double getX(){return x;}//getX
+    public void eat(int amount){
+        food += amount;
+    }
     
-    public void setY(double y){this.y = y;}//setY
-    public double getY(){return y;}//getY
+    public void setX(double x){
+        this.x = x;
+    }//setX
+    public double getX(){
+        return x;
+    }//getX
+    public void setY(double y){
+        this.y = y;
+    }//setY
+    public double getY(){
+        return y;
+    }//getY
+    
+    public int getFood(){
+        return food;
+    }
     
     private int getPointX(){
         return (int)(Math.cos(rot) * 2 * size + x);

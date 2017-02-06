@@ -4,22 +4,23 @@ import java.util.ArrayList;
 
 public class Brain {
     
-    private final ArrayList<neuron> neurons;
-    private double[] input = new double[6], output;
+    
+    private final ArrayList<Neuron> neurons;
+    private double[] input = new double[12], output;
     
     public Brain(){
         neurons = new ArrayList();
         int n = (int)(Math.random() * 4) + 4;
         for(int i = 0; i < n; i++){
-            neurons.add(new neuron());
+            neurons.add(new Neuron());
         }
     }//Brain
     
     public Brain(Brain b){
         neurons = new ArrayList();
-        for(neuron n: b.neurons){
+        for(Neuron n: b.neurons){
             if(Math.random() < 0.98)
-                neurons.add(new neuron(n));
+                neurons.add(new Neuron(n));
             
         }
         
@@ -32,20 +33,20 @@ public class Brain {
         return output;
     }//getIn
     
-    public double[] act(Creature c, ArrayList<Creature> creatures, double pace){
+    public double[] act(Creature c, ArrayList<Creature> creatures, ArrayList<Food> foods, double pace){
         
-        input = new double[6];
+        input = new double[12];
         
         for(int i = 0; i < creatures.size(); i++){
             Creature cc = creatures.get(i);
             
-            double dist = Math.hypot(c.x - cc.x, c.y - cc.y) - 0.001;//prevent /0
-            if(dist < (c.size + cc.size) * 3  && cc != c){
+            double dist = Math.hypot(c.getX() - cc.getX(), c.getY() - cc.getY()) - 0.001;//prevent /0
+            if(dist < (c.getSize() + cc.getSize()) * 3  && cc != c){
                 
-                double dir = Math.acos((cc.x - c.x) / dist) - c.rot;
-                if(cc.y < c.y){
+                double dir = Math.acos((cc.getX() - c.getX()) / dist) - c.getRot();
+                if(cc.getY() < c.getY())
                     dir *= -1;
-                }
+                
                 
                 dir += Math.PI / 4;
                 
@@ -56,11 +57,31 @@ public class Brain {
                 input[(int)(3 * dir / Math.PI)] += 5/dist;
             }
         }
+        for(int i = 0; i < foods.size(); i++){
+            Food f = foods.get(i);
+            
+            double dist = Math.hypot(c.getX() - f.getX(), c.getY() - f.getY()) - 0.001;//prevent /0
+            if(dist < (c.getSize() + f.getRadius()) * 3){
+                
+                double dir = Math.acos((f.getX() - c.getX()) / dist) - c.getRot();
+                if(f.getY() < c.getY())
+                    dir *= -1;
+                
+                
+                dir += Math.PI / 4;
+                
+                
+                dir += Math.PI * 4;
+                dir %= Math.PI * 2;
+                
+                input[6 + (int)(3 * dir / Math.PI)] += 5/dist;
+            }
+        }
         
         output = new double[2];
         
-        for(neuron n: neurons)
-            n.act(pace);
+        for(Neuron n: neurons)
+            n.act(pace, input, output);
         
         output[0] = f(output[0]);
         output[1] = f(output[1]) / 4;
@@ -72,55 +93,14 @@ public class Brain {
     public int size(){
         return neurons.size();
     }//size
-    public ArrayList<neuron> getNeurons(){
+    public ArrayList<Neuron> getNeurons(){
         return neurons;
     }//getNeurons
     
-    public class neuron{
-        
-        final double[] inputWeights = new double[6], outputWeights = new double[2];
-        double value = 0;
-        
-        neuron(){
-            for(int i = 0; i < inputWeights.length; i++){
-                inputWeights[i] = Math.pow(Math.random() * 4 - 2, 3);
-            }
-            for(int i = 0; i < outputWeights.length; i++){
-                outputWeights[i] = Math.pow(Math.random() * 4 - 2, 3);
-            }
-        }//neuron
-        
-        neuron(neuron n){
-            for(int i = 0; i < inputWeights.length; i++){
-                inputWeights[i] = n.inputWeights[i];
-                if(Math.random() < 0.2)
-                    inputWeights[i] += Math.pow(Math.random() * 4 - 2, 3);
-            }
-            for(int i = 0; i < outputWeights.length; i++){
-                outputWeights[i] = n.outputWeights[i];
-                if(Math.random() < 0.2)
-                    outputWeights[i] += Math.pow(Math.random() * 4 - 2, 3);
-            }
-        }//neuron
-        
-        void act(double pace){
-            
-            value = 0;
-            for(int i = 0; i < inputWeights.length; i++){
-                value += input[i] * inputWeights[i];
-            }
-            value = f(value);
-            
-            output[0] = value * outputWeights[0];
-            output[1] = value * outputWeights[1];
-            
-        }//neuron.act
-        
-        
-    }//neuron
     
-    private double f(double x){
+    static double f(double x){
         return (1 - Math.exp(-2*x)) / (1 + Math.exp(-2*x));
     }//f
+    
     
 }
