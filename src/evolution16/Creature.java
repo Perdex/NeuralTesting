@@ -10,7 +10,7 @@ public class Creature{
     public static int topGen = 0, leastGen = 0;
     
     private double speed, normalSpeed, x, y, rot;
-    private int food = 400;
+    private int food = 800;
     private final int generation, size;
     private final Brain brain;
     
@@ -33,13 +33,18 @@ public class Creature{
         
     }//Creature
     
+    // Create a mutated creature
     private Creature(Creature c){
+        // Position behind the parent, facing away
         x = c.x - Math.cos(c.rot) * c.size * 2 * (1 + Math.random() * 0.2);
         y = c.y - Math.sin(c.rot) * c.size * 2 * (1 + Math.random() * 0.2);
         rot = (c.rot + Math.PI) % (Math.PI * 2);
+        
+        // Update gen
         generation = c.generation + 1;
         topGen = Math.max(topGen, generation);
         
+        // Vary the creature size
         int size = c.size;
         double d = sq(Math.random() * 3);
         if(Math.random() < 0.5)
@@ -52,6 +57,7 @@ public class Creature{
         
         this.size = size;
         
+        // Vary the "idle" speed
         normalSpeed = c.normalSpeed;
         d = sq(Math.random() * 3);
         if(Math.random() < 0.5)
@@ -59,15 +65,16 @@ public class Creature{
         else
             normalSpeed -= d;
         
+        // Limit the speed to sensible values
         normalSpeed = Math.min(normalSpeed, 2);
         normalSpeed = Math.max(normalSpeed, -2);
         
         speed = normalSpeed;
         
+        // Slightly change the color
         r = c.r;
         g = c.g;
         b = c.b;
-        
         if(Math.random() < 0.5){
             r += Math.random() * 40 - 20;
             r = Math.max(r, 0);
@@ -126,7 +133,7 @@ public class Creature{
         
         double[] out = brain.act(this, cc, foods, pace);
         
-        rot += out[0] * pace * 2;
+        rot += out[0] * pace * 2; // Magical!
         speed += out[1] * pace * 2;
         
         x += pace * speed * Math.cos(rot);
@@ -157,6 +164,7 @@ public class Creature{
 
         rot %= Math.PI * 2;
         
+        // Eat all foods that the snout touches
         for(int i = 0; i < foods.size(); i++){
             Food f = foods.get(i);
             if(f.contains(getPointX(), getPointY())){
@@ -165,17 +173,19 @@ public class Creature{
             }
         }
         
+        // MASSACRE the other creatures
         for(Creature c : cc){
             if(c == this)
                 continue;
             
-            //check if killing the other
+            // Check if killing the other
             if(Math.hypot(c.x - getPointX(), c.y - getPointY()) < c.size){
+                // Eat up the opponent
                 c.food -= killSpeed;
                 food += killSpeed;
             }
             
-            //remove overlap
+            // Prevent overlap
             double dist = Math.hypot(x - c.x, y - c.y) - 0.01;//prevent /0
             if(dist < size + c.size){
                 double toMove = dist - size - c.size;
@@ -185,13 +195,16 @@ public class Creature{
             }
         }
         
-        if(food > 400 && Math.random() < 1e-3 * pace){
+        // Randomly reproduce if well eaten
+        if(food > 400 && Math.random() < 2e-6 * food * pace){
+            // Create the child
             cc.add(new Creature(this));
             
+            // Surely childbirth is tough.. at least 400 tough!
             food -= 400;
         }
         
-        
+        // Update statistic
         leastGen = Math.min(leastGen, generation);
         
         return false;

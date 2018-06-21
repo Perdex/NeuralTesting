@@ -24,8 +24,8 @@ public class Evolution16 extends Thread{
     @Override
     public void run(){
         
-        for(int i = 0; i < 5; i++)
-            add();
+        add();
+        add();
         addFood(100);
         
         while(true){

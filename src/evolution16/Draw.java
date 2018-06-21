@@ -53,7 +53,7 @@ public class Draw extends JPanel{
         addButton.addActionListener((ActionEvent ev)->{
             e.add();
         });
-        add(addButton);
+        //add(addButton);
         
         main = e;
     }//Draw
@@ -134,52 +134,57 @@ public class Draw extends JPanel{
     
     private void drawNetwork(Graphics g){
         int w = getWidth();
+        int ww = 800;
+        int hh = 400;
         g.setColor(Color.white);
-        g.fillRect(w - 400, -1, w, 280);
+        g.fillRect(w - ww, -1, w, hh);
         g.setColor(Color.black);
-        g.drawRect(w - 400, -1, w, 280);
+        g.drawRect(w - ww, -1, w, hh);
 
         int c;
         ArrayList<Neuron> neurons = selected.getNeurons();
+        //middle neurons and connections
         for(int i = 0; i < neurons.size(); i++){
 
             for(int j = 0; j < neurons.get(i).inputWeights.length; j++){
                 c = Math.max(128 - (int)(neurons.get(i).inputWeights[j] * 128), 0);
                 c = Math.min(c, 255);
                 g.setColor(new Color(c, c, c));
-                g.drawLine(w - 190, 30 + i * 260 / neurons.size(), w - 340, 30 + j * 240 / neurons.get(i).inputWeights.length);
+                g.drawLine(w - ww/2 + 10, 30 + i * (hh - 20) / neurons.size(), w - ww + 60, 30 + j * (hh - 40) / neurons.get(i).inputWeights.length);
             }
 
             for(int j = 0; j < 2; j++){
                 c = Math.max(128 - (int)(neurons.get(i).outputWeights[j] * 128), 0);
                 c = Math.min(c, 255);
                 g.setColor(new Color(c, c, c));
-                g.drawLine(w - 190, 30 + i * 260 / neurons.size(), w - 40, 100 + j * 100);
+                g.drawLine(w - ww/2 + 10, 30 + i * (hh - 20) / neurons.size(), w - 40, hh/2 - 80 + j * 160);
             }
 
             c = Math.max(128 - (int)(neurons.get(i).value * 128), 0);
             c = Math.min(c, 255);
             g.setColor(new Color(c, c, c));
-            g.fillOval(w - 200, 20 + i * 260 / neurons.size(), 20, 20);
+            g.fillOval(w - ww/2, 20 + i * (hh - 20) / neurons.size(), 20, 20);
             g.setColor(Color.black);
-            g.drawOval(w - 200, 20 + i * 260 / neurons.size(), 20, 20);
+            g.drawOval(w - ww/2, 20 + i * (hh - 20) / neurons.size(), 20, 20);
         }
 
+        // left neurons
         for(int i = 0; i < selected.getInput().length; i++){
             c = Math.max(128 - (int)(selected.getInput()[i] * 128), 0);
             c = Math.min(c, 255);
             g.setColor(new Color(c, c, c));
-            g.fillOval(w - 350, 20 + i * 240 / selected.getInput().length, 20, 20);
+            g.fillOval(w - ww + 50, 20 + i * (hh - 40) / selected.getInput().length, 20, 20);
             g.setColor(Color.black);
-            g.drawOval(w - 350, 20 + i * 240 / selected.getInput().length, 20, 20);
+            g.drawOval(w - ww + 50, 20 + i * (hh - 40) / selected.getInput().length, 20, 20);
         }
+        // right neurons
         for(int i = 0; i < 2; i++){
             c = Math.max(128 - (int)(selected.getOutput()[i] * 128), 0);
             c = Math.min(c, 255);
             g.setColor(new Color(c, c, c));
-            g.fillOval(w - 50, 90 + 100 * i, 20, 20);
+            g.fillOval(w - 50, hh/2 - 90 + i * 160, 30, 30);
             g.setColor(Color.black);
-            g.drawOval(w - 50, 90 + 100 * i, 20, 20);
+            g.drawOval(w - 50, hh/2 - 90 + i * 160, 30, 30);
         }
         
         g.drawString(Integer.toString(selected.getFood()), getWidth() - 80, 20);
